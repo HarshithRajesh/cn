@@ -1,0 +1,271 @@
+Here’s your **structured MySQL DBMS Lab Guide** with all topics covered, including **NULL handling, Nested Queries, Aggregate Functions, Grouping, Constraints, Views, and Basic CRUD operations.**  
+
+---
+
+# **📌 MySQL DBMS Lab Guide** 🚀  
+
+## **1️⃣ Basic MySQL Commands**  
+
+### **🔹 Create a Database**
+```sql
+CREATE DATABASE school;
+```
+🔹 Creates a new database named **school**.  
+
+### **🔹 Use a Database**
+```sql
+USE school;
+```
+🔹 Selects the **school** database to work with.  
+
+---
+
+## **2️⃣ Creating Tables & Schema**  
+
+### **📌 Students Table**
+```sql
+CREATE TABLE students (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    age INT CHECK (age > 10),
+    email VARCHAR(100) UNIQUE,
+    class VARCHAR(10)
+);
+```
+🔹 `AUTO_INCREMENT`: Auto-generates `id`.  
+🔹 `NOT NULL`: Ensures `name` is required.  
+🔹 `CHECK`: Ensures `age > 10`.  
+🔹 `UNIQUE`: Ensures no duplicate `email`.  
+
+### **📌 Teachers Table**
+```sql
+CREATE TABLE teachers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    subject VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE
+);
+```
+🔹 Stores teacher details.  
+
+### **📌 Courses Table**
+```sql
+CREATE TABLE courses (
+    course_id INT PRIMARY KEY AUTO_INCREMENT,
+    course_name VARCHAR(50) NOT NULL,
+    teacher_id INT,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id)
+);
+```
+🔹 Links `teachers` via `teacher_id` (Foreign Key).  
+
+### **📌 Enrollments Table (Many-to-Many Relationship)**
+```sql
+CREATE TABLE enrollments (
+    enrollment_id INT PRIMARY KEY AUTO_INCREMENT,
+    student_id INT,
+    course_id INT,
+    enrollment_date DATE NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(id),
+    FOREIGN KEY (course_id) REFERENCES courses(course_id)
+);
+```
+🔹 Links **students** and **courses** (Many-to-Many).  
+
+---
+
+## **3️⃣ CRUD Operations (Create, Read, Update, Delete)**  
+
+### **🔹 Insert Data (CREATE)**
+```sql
+INSERT INTO students (name, age, email, class)
+VALUES ('John Doe', 15, 'john@example.com', '10A');
+```
+🔹 Adds a new student record.  
+
+### **🔹 Read Data (SELECT)**
+```sql
+SELECT * FROM students;
+```
+🔹 Retrieves all student records.  
+
+### **🔹 Update Data (UPDATE)**
+```sql
+UPDATE students 
+SET class = '12B'
+WHERE name = 'John Doe';
+```
+🔹 Updates `class` for John Doe.  
+
+### **🔹 Delete Data (DELETE)**
+```sql
+DELETE FROM students WHERE name = 'John Doe';
+```
+🔹 Deletes John Doe's record.  
+
+---
+
+## **4️⃣ NULL in SQL Queries**  
+
+### **🔹 Find Students with NULL Email**
+```sql
+SELECT * FROM students WHERE email IS NULL;
+```
+🔹 Finds students without an email.  
+
+### **🔹 Set NULL for a Column**
+```sql
+UPDATE students SET email = NULL WHERE id = 2;
+```
+🔹 Sets email as NULL for a student.  
+
+---
+
+## **5️⃣ Nesting of Queries (Subqueries)**  
+
+### **🔹 Find Students Enrolled in ‘DBMS’**
+```sql
+SELECT name FROM students
+WHERE id IN (
+    SELECT student_id FROM enrollments 
+    WHERE course_id = (SELECT course_id FROM courses WHERE course_name = 'DBMS')
+);
+```
+🔹 Finds students taking **DBMS**.  
+
+---
+
+## **6️⃣ Aggregate Functions**  
+
+### **🔹 Find Total Students**
+```sql
+SELECT COUNT(*) AS total_students FROM students;
+```
+🔹 Counts the total students.  
+
+### **🔹 Find Average Age of Students**
+```sql
+SELECT AVG(age) AS average_age FROM students;
+```
+🔹 Computes **average** age.  
+
+---
+
+## **7️⃣ Grouping (GROUP BY & HAVING)**  
+
+### **🔹 Count Students Per Class**
+```sql
+SELECT class, COUNT(id) AS student_count
+FROM students
+GROUP BY class;
+```
+🔹 Groups students by class.  
+
+### **🔹 Find Classes with More than 5 Students**
+```sql
+SELECT class, COUNT(id) AS student_count
+FROM students
+GROUP BY class
+HAVING COUNT(id) > 5;
+```
+🔹 **Filters** classes with more than **5 students**.  
+
+---
+
+## **8️⃣ General Constraints (Assertions & Triggers)**  
+
+⚠ **Note:** MySQL **does not support** `CREATE ASSERTION`, so we use **Triggers** instead.  
+
+### **🔹 Prevent a Student from Enrolling in More Than 5 Courses**
+```sql
+CREATE TRIGGER check_max_courses
+BEFORE INSERT ON enrollments
+FOR EACH ROW
+BEGIN
+    DECLARE student_course_count INT;
+    SELECT COUNT(*) INTO student_course_count 
+    FROM enrollments WHERE student_id = NEW.student_id;
+    
+    IF student_course_count >= 5 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot enroll in more than 5 courses';
+    END IF;
+END;
+```
+🔹 Prevents students from **enrolling in more than 5 courses**.  
+
+---
+
+## **9️⃣ Views in SQL**  
+
+### **🔹 Create a View for Student Enrollments**
+```sql
+CREATE VIEW student_enrollments AS
+SELECT s.id, s.name, c.course_name, e.enrollment_date
+FROM students s
+JOIN enrollments e ON s.id = e.student_id
+JOIN courses c ON e.course_id = c.course_id;
+```
+🔹 Creates a **virtual table** of student enrollments.  
+
+### **🔹 Query the View**
+```sql
+SELECT * FROM student_enrollments;
+```
+
+---
+
+## **🔟 Miscellaneous Commands**  
+
+### **🔹 Show All Databases**
+```sql
+SHOW DATABASES;
+```
+
+### **🔹 Show All Tables**
+```sql
+SHOW TABLES;
+```
+
+### **🔹 Describe a Table**
+```sql
+DESC students;
+```
+or  
+```sql
+EXPLAIN students;
+```
+
+### **🔹 View All Constraints**
+```sql
+SELECT * FROM information_schema.TABLE_CONSTRAINTS 
+WHERE table_name = 'students';
+```
+
+---
+
+# **📌 Final Schema Overview**  
+
+| Table Name   | Attributes & Constraints |
+|-------------|------------------------|
+| **students** | id (Primary Key), name (NOT NULL), age (CHECK age > 10), email (UNIQUE), class |
+| **teachers** | id (Primary Key), name (NOT NULL), subject (NOT NULL), email (UNIQUE) |
+| **courses** | course_id (Primary Key), course_name (NOT NULL), teacher_id (Foreign Key → teachers) |
+| **enrollments** | enrollment_id (Primary Key), student_id (Foreign Key → students), course_id (Foreign Key → courses), enrollment_date (NOT NULL) |
+
+---
+
+## **🚀 Summary of Covered Topics**  
+
+✅ **Basic MySQL Commands** (Database creation, CRUD operations)  
+✅ **NULL Handling in SQL Queries**  
+✅ **Nesting of Queries (Subqueries)**  
+✅ **Aggregate Functions (COUNT, AVG, etc.)**  
+✅ **Grouping (GROUP BY & HAVING)**  
+✅ **General Constraints using Triggers**  
+✅ **Views in SQL (Virtual Tables)**  
+✅ **Miscellaneous Commands (SHOW, DESCRIBE, EXECUTE SQL, etc.)**  
+
+---
+
+✅ **This guide covers all key DBMS Lab topics with practical MySQL queries!** 🚀  
+Let me know if you need any modifications or additional explanations! 😊
